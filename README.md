@@ -1,1 +1,3 @@
-# mlops_recognising_handwritten_digit
+# mlops: 
+Lab content:
+recognising handwritten digit 
