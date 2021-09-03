@@ -11,5 +11,6 @@ The digit recognition was ran for different resolution and the results are attac
 
 
 
+We see that the more resuloution is causing accuracy to drop and the more training samples are causing accuracy to raise.
 
 
