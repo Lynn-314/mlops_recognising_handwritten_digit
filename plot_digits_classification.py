@@ -18,6 +18,9 @@ import matplotlib.pyplot as plt
 # Import datasets, classifiers and performance metrics
 from sklearn import datasets, svm, metrics
 from sklearn.model_selection import train_test_split
+from skimage import data, color
+from skimage.transform import rescale, resize, downscale_local_mean
+
 
 ###############################################################################
 # Digits dataset
@@ -34,12 +37,13 @@ from sklearn.model_selection import train_test_split
 # them using :func:`matplotlib.pyplot.imread`.
 
 digits = datasets.load_digits()
-
+"""
 _, axes = plt.subplots(nrows=1, ncols=4, figsize=(10, 3))
 for ax, image, label in zip(axes, digits.images, digits.target):
     ax.set_axis_off()
     ax.imshow(image, cmap=plt.cm.gray_r, interpolation='nearest')
     ax.set_title('Training: %i' % label)
+"""
 
 ###############################################################################
 # Classification
@@ -56,47 +60,43 @@ for ax, image, label in zip(axes, digits.images, digits.target):
 # subsequently be used to predict the value of the digit for the samples
 # in the test subset.
 
-# flatten the images
-n_samples = len(digits.images)
-data = digits.images.reshape((n_samples, -1))
+def classify_given_res_and_split(test_size,res,data):
+  n_samples = len(digits.images)
+  resized_data = resize(data, (n_samples,res, res),anti_aliasing=True)
+  
+  data = resized_data.reshape((n_samples, -1))
 
-# Create a classifier: a support vector classifier
-clf = svm.SVC(gamma=0.001)
+  # Create a classifier: a support vector classifier
+  clf = svm.SVC(gamma=0.001)
 
-# Split data into 50% train and 50% test subsets
-X_train, X_test, y_train, y_test = train_test_split(
-    data, digits.target, test_size=0.5, shuffle=False)
+  # Split data 
+  X_train, X_test, y_train, y_test = train_test_split(
+      data, digits.target, test_size=test_size, shuffle=False)
 
-# Learn the digits on the train subset
-clf.fit(X_train, y_train)
+  # Learn the digits on the train subset
+  clf.fit(X_train, y_train)
 
-# Predict the value of the digit on the test subset
-predicted = clf.predict(X_test)
+  # Predict the value of the digit on the test subset
+  predicted = clf.predict(X_test)
 
-###############################################################################
-# Below we visualize the first 4 test samples and show their predicted
-# digit value in the title.
 
-_, axes = plt.subplots(nrows=1, ncols=4, figsize=(10, 3))
-for ax, image, prediction in zip(axes, X_test, predicted):
-    ax.set_axis_off()
-    image = image.reshape(8, 8)
-    ax.imshow(image, cmap=plt.cm.gray_r, interpolation='nearest')
-    ax.set_title(f'Prediction: {prediction}')
+  ###############################################################################
+  # :func:`~sklearn.metrics.classification_report` builds a text report showing
+  # the main classification metrics.
 
-###############################################################################
-# :func:`~sklearn.metrics.classification_report` builds a text report showing
-# the main classification metrics.
+  #print(f"Classification report for classifier {clf}:\n"f"{metrics.classification_report(y_test, predicted)}\n")
+  accuracy = metrics.accuracy_score(y_test, predicted)
+  f1_score = metrics.f1_score(y_test, predicted,average="macro")
+  return accuracy,f1_score
 
-print(f"Classification report for classifier {clf}:\n"
-      f"{metrics.classification_report(y_test, predicted)}\n")
 
-###############################################################################
-# We can also plot a :ref:`confusion matrix <confusion_matrix>` of the
-# true digit values and the predicted digit values.
 
-disp = metrics.plot_confusion_matrix(clf, X_test, y_test)
-disp.figure_.suptitle("Confusion Matrix")
-print(f"Confusion matrix:\n{disp.confusion_matrix}")
 
-plt.show()
+resolutions = [64,32,16]
+test_sizes = [0.1,0.2,0.3,0.4]
+
+
+for res in resolutions:
+  for test_size in test_sizes:
+    accuracy,f1_score = classify_given_res_and_split(test_size=test_size,res=res,data=digits.images)
+    print(f"For resolotion {res}X{res}, and train-test split {int((1-test_size)*100)}-{int((test_size)*100)}\n accuracy is {accuracy:.4f} and F1 score is {f1_score:.4f}",)
