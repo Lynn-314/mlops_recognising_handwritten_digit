@@ -1,9 +1,9 @@
 #ML-Ops: 
-Lab on 2nd September:
+Lab quiz on 3nd September:
 Recognising Handwritten Digits
 
-The python file was run in local machine with mini-conda environment.
-The obtained results are attached below:
+The digit recognition was ran for different resolution and the results are attached bellow:
+![](Images/q1.png)
 
 
 
