@@ -18,8 +18,7 @@ import matplotlib.pyplot as plt
 # Import datasets, classifiers and performance metrics
 from sklearn import datasets, svm, metrics
 from sklearn.model_selection import train_test_split
-from skimage import data, color
-from skimage.transform import rescale, resize, downscale_local_mean
+
 
 
 ###############################################################################
@@ -35,7 +34,6 @@ from skimage.transform import rescale, resize, downscale_local_mean
 #
 # Note: if we were working from image files (e.g., 'png' files), we would load
 # them using :func:`matplotlib.pyplot.imread`.
-
 digits = datasets.load_digits()
 """
 _, axes = plt.subplots(nrows=1, ncols=4, figsize=(10, 3))
@@ -60,18 +58,17 @@ for ax, image, label in zip(axes, digits.images, digits.target):
 # subsequently be used to predict the value of the digit for the samples
 # in the test subset.
 
-def classify_given_res_and_split(test_size,res,data):
+def classify_given_gamma(gamma,data):
   n_samples = len(digits.images)
-  resized_data = resize(data, (n_samples,res, res),anti_aliasing=True)
   
-  data = resized_data.reshape((n_samples, -1))
+  data = data.reshape((n_samples, -1))
 
   # Create a classifier: a support vector classifier
-  clf = svm.SVC(gamma=0.001)
+  clf = svm.SVC(gamma=gamma)
 
   # Split data 
   X_train, X_test, y_train, y_test = train_test_split(
-      data, digits.target, test_size=test_size, shuffle=False)
+      data, digits.target, test_size=0.2, shuffle=False)
 
   # Learn the digits on the train subset
   clf.fit(X_train, y_train)
@@ -92,11 +89,28 @@ def classify_given_res_and_split(test_size,res,data):
 
 
 
-resolutions = [64,32,16]
-test_sizes = [0.1,0.2,0.3,0.4]
-
-
-for res in resolutions:
-  for test_size in test_sizes:
-    accuracy,f1_score = classify_given_res_and_split(test_size=test_size,res=res,data=digits.images)
-    print(f"For resolotion {res}X{res}, and train-test split {int((1-test_size)*100)}-{int((test_size)*100)}\n accuracy is {accuracy:.4f} and F1 score is {f1_score:.4f}",)
+gammas=[0.0001,0.0005,0.001,0.005,0.01,0.05,0.1,0.2,0.5,0.8,1,2,5,10]
+accuracies=[]
+f1_scores = []
+for g in gammas:
+  accuracy,f1_score = classify_given_gamma(gamma=g,data=digits.images)
+  accuracies.append(accuracy)
+  f1_scores.append(f1_score)
+  print(f"For gamma {g} accuracy is {accuracy:.4f} and F1 score is {f1_score:.4f}",)
+my_ticks = [i for i in range(len(gammas))]
+fig = plt.figure(figsize=(20, 6))
+ax1 = fig.add_subplot(121)
+ax1.set_xticks(my_ticks)
+ax1.set_xticklabels(gammas)
+ax1.plot(my_ticks, accuracies)
+ax1.set_ylabel('accuracy')
+ax1.set_xlabel("gamma")
+ax1.set_title('accuracy vs gamma')
+ax2 = fig.add_subplot(122)
+ax2.set_xticks(my_ticks)
+ax2.set_xticklabels(gammas)
+ax2.plot(my_ticks, f1_scores)
+ax2.set_ylabel('f1 score')
+ax2.set_xlabel("gamma")
+ax2.set_title('f1 score vs gamma')
+plt.show()
