@@ -18,72 +18,35 @@ import matplotlib.pyplot as plt
 # Import datasets, classifiers and performance metrics
 from sklearn import datasets, svm, metrics
 from sklearn.model_selection import train_test_split
+from joblib import dump,load
+import argparse
 
 
 
-###############################################################################
-# Digits dataset
-# --------------
-#
-# The digits dataset consists of 8x8
-# pixel images of digits. The ``images`` attribute of the dataset stores
-# 8x8 arrays of grayscale values for each image. We will use these arrays to
-# visualize the first 4 images. The ``target`` attribute of the dataset stores
-# the digit each image represents and this is included in the title of the 4
-# plots below.
-#
-# Note: if we were working from image files (e.g., 'png' files), we would load
-# them using :func:`matplotlib.pyplot.imread`.
 digits = datasets.load_digits()
-"""
-_, axes = plt.subplots(nrows=1, ncols=4, figsize=(10, 3))
-for ax, image, label in zip(axes, digits.images, digits.target):
-    ax.set_axis_off()
-    ax.imshow(image, cmap=plt.cm.gray_r, interpolation='nearest')
-    ax.set_title('Training: %i' % label)
-"""
+data=digits.images
+n_samples = len(data)  
+data = data.reshape((n_samples, -1))
 
-###############################################################################
-# Classification
-# --------------
-#
-# To apply a classifier on this data, we need to flatten the images, turning
-# each 2-D array of grayscale values from shape ``(8, 8)`` into shape
-# ``(64,)``. Subsequently, the entire dataset will be of shape
-# ``(n_samples, n_features)``, where ``n_samples`` is the number of images and
-# ``n_features`` is the total number of pixels in each image.
-#
-# We can then split the data into train and test subsets and fit a support
-# vector classifier on the train samples. The fitted classifier can
-# subsequently be used to predict the value of the digit for the samples
-# in the test subset.
 
-def classify_given_gamma(gamma,data):
-  n_samples = len(digits.images)
-  
-  data = data.reshape((n_samples, -1))
 
-  # Create a classifier: a support vector classifier
+
+ 
+X_train, X_test, y_train, y_test = train_test_split(
+    data, digits.target, test_size=0.4, shuffle=False)
+X_validation, X_test, y_validation, y_test = train_test_split(
+  X_test, y_test, test_size=0.5, shuffle=False)
+
+
+def train_with_gamma(gamma,X_train,y_train):
   clf = svm.SVC(gamma=gamma)
-
-  # Split data 
-  X_train, X_test, y_train, y_test = train_test_split(
-      data, digits.target, test_size=0.2, shuffle=False)
-
-  # Learn the digits on the train subset
   clf.fit(X_train, y_train)
+  return clf
 
-  # Predict the value of the digit on the test subset
-  predicted = clf.predict(X_test)
-
-
-  ###############################################################################
-  # :func:`~sklearn.metrics.classification_report` builds a text report showing
-  # the main classification metrics.
-
-  #print(f"Classification report for classifier {clf}:\n"f"{metrics.classification_report(y_test, predicted)}\n")
-  accuracy = metrics.accuracy_score(y_test, predicted)
-  f1_score = metrics.f1_score(y_test, predicted,average="macro")
+def evaluate(clf,X,y):
+  predicted = clf.predict(X)
+  accuracy = metrics.accuracy_score(y, predicted)
+  f1_score = metrics.f1_score(y, predicted,average="macro")
   return accuracy,f1_score
 
 
@@ -92,25 +55,26 @@ def classify_given_gamma(gamma,data):
 gammas=[0.0001,0.0005,0.001,0.005,0.01,0.05,0.1,0.2,0.5,0.8,1,2,5,10]
 accuracies=[]
 f1_scores = []
+optimum_accuracy = 0
+optimal_gamma = 0
+#optimal_classifier = None
+parser = argparse.ArgumentParser(description='Perser')
+parser.add_argument('--file_path', default='/content/digit_recog_model', type=str)
+the_args = parser.parse_args()
 for g in gammas:
-  accuracy,f1_score = classify_given_gamma(gamma=g,data=digits.images)
+  classifier = train_with_gamma(g,X_train,y_train)
+  accuracy,f1_score = evaluate(classifier,X_validation ,y_validation)
   accuracies.append(accuracy)
   f1_scores.append(f1_score)
   print(f"For gamma {g} accuracy is {accuracy:.4f} and F1 score is {f1_score:.4f}",)
-my_ticks = [i for i in range(len(gammas))]
-fig = plt.figure(figsize=(20, 6))
-ax1 = fig.add_subplot(121)
-ax1.set_xticks(my_ticks)
-ax1.set_xticklabels(gammas)
-ax1.plot(my_ticks, accuracies)
-ax1.set_ylabel('accuracy')
-ax1.set_xlabel("gamma")
-ax1.set_title('accuracy vs gamma')
-ax2 = fig.add_subplot(122)
-ax2.set_xticks(my_ticks)
-ax2.set_xticklabels(gammas)
-ax2.plot(my_ticks, f1_scores)
-ax2.set_ylabel('f1 score')
-ax2.set_xlabel("gamma")
-ax2.set_title('f1 score vs gamma')
-plt.show()
+  if accuracy > optimum_accuracy:
+    optimum_accuracy = accuracy
+    optimal_gamma = g
+    dump(classifier,the_args.file_path)
+    #optimal_classifier = classifier
+
+
+print(f"Optimal Gamma is {optimal_gamma}")
+optimal_classifier = load(the_args.file_path)
+accuracy,f1_score = evaluate(optimal_classifier,X_test ,y_test)
+print(f"Accuracy and F1 score on test set with optimal Gamma are {accuracy} and {f1_score}")
