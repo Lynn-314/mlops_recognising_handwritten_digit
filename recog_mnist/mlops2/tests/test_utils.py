@@ -15,7 +15,7 @@ def test_model_writing():
     expected_model_file_path = "C:/Users/user/PycharmProjects/mlops/model_stored.joblib"
     gamma = 0.01
     metrics_valid = run_classification_experiement(X_train, y_train, X_validation, y_validation, gamma,
-                                                   expected_model_file_path, skip_dummy=True)
+                                                   expected_model_file_path, skip_random=True)
     assert os.path.isfile(expected_model_file_path)
 
 def test_small_data_overfit_checking():
@@ -26,6 +26,6 @@ def test_small_data_overfit_checking():
     expected_model_file_path = "E:/Gits/recog_mnist/mlops2/model_stored.joblib"
     gamma = 0.01
     metrics_train = run_classification_experiement(X_train, y_train, X_train, y_train, gamma,
-                                                   expected_model_file_path, skip_dummy=True)
+                                                   expected_model_file_path, skip_random=True)
     assert metrics_train['accuracy'] > 0.8
     assert metrics_train['f1'] > 0.8
