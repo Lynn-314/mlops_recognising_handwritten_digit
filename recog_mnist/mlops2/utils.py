@@ -47,15 +47,4 @@ def run_classification_experiement(x_train,y_train,x_valid,y_valid,gamma,output_
         os.mkdir(output_folder)
     dump(clf,output_model_file)
     return metrics_valid
-def run_classification_experiement(x_train,y_train,x_valid,y_valid,gamma,output_model_file,skip_random=True):
-    random_val_acc=get_random_acc(y_valid)
-    clf = svm.SVC(gamma=gamma)
-    clf.fit(x_train,y_train)
-    metrics_valid = eval(clf,x_valid,y_valid)
-    if skip_random and metrics_valid["accuracy"] < random_val_acc:
-        return None
-    output_folder=os.path.dirname(output_model_file)
-    if not os.path.isdir(output_folder):
-        os.mkdir(output_folder)
-    dump(clf,output_model_file)
-    return metrics_valid
+
