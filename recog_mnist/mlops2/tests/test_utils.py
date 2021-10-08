@@ -7,25 +7,34 @@ from joblib import dump,load
 import argparse
 from utils import *
 
-def test_model_writing():
+def test_split_creation_case1():
     digits = datasets.load_digits()
-    split_train = 0.6
-    split_val = 0.5
-    X_train, y_train, X_validation, y_validation, X_test, y_test = preprocess_split_data(digits,split_train,split_val)
-    expected_model_file_path = "C:/Users/user/PycharmProjects/mlops/model_stored.joblib"
-    gamma = 0.01
-    metrics_valid = run_classification_experiement(X_train, y_train, X_validation, y_validation, gamma,
-                                                   expected_model_file_path, skip_dummy=True)
-    assert os.path.isfile(expected_model_file_path)
+    num_samples = 100
+    digits["data"] = digits["data"][0:num_samples]
+    digits["target"] = digits["target"][0:num_samples]
+    train_split = 70
+    val_split = 20
+    test_split = 10
+    X_train, y_train, X_validation, y_validation, X_test, y_test = preprocess_split_data(digits,train_split,val_split,test_split)
+    assert len(y_train) + len(y_validation) + len(y_test) == num_samples
+    assert len(y_train) == np.round(num_samples*train_split/100,0)
+    assert len(y_validation) == np.round(num_samples * val_split/100, 0)
+    assert len(y_test) == np.round(num_samples * test_split/100, 0)
 
-def test_small_data_overfit_checking():
+
+def test_split_creation_case2():
     digits = datasets.load_digits()
-    split_train = 0.4
-    split_val = 0.5
-    X_train, y_train, X_validation, y_validation, X_test, y_test = preprocess_split_data(digits, split_train, split_val)
-    expected_model_file_path = "E:/Gits/recog_mnist/mlops2/model_stored.joblib"
-    gamma = 0.01
-    metrics_train = run_classification_experiement(X_train, y_train, X_train, y_train, gamma,
-                                                   expected_model_file_path, skip_dummy=True)
-    assert metrics_train['accuracy'] > 0.8
-    assert metrics_train['f1'] > 0.8
+    num_samples = 9
+    digits["data"] = digits["data"][0:num_samples]
+    digits["target"] = digits["target"][0:num_samples]
+    train_split = 70
+    val_split = 20
+    test_split = 10
+    X_train, y_train, X_validation, y_validation, X_test, y_test = preprocess_split_data(digits,train_split,val_split,test_split)
+    assert len(y_train) + len(y_validation) + len(y_test) == num_samples
+    assert len(y_train) == np.round(num_samples*train_split/100,0)
+    assert len(y_validation) == np.round(num_samples * val_split/100, 0)
+    assert len(y_test) == np.round(num_samples * test_split/100, 0)
+
+
+
