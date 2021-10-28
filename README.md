@@ -1,9 +1,10 @@
 #ML-Ops: 
-Lab on 2nd September:
-Recognising Handwritten Digits
+Assignment 7:
+Comparision between Tree and SVM are drawn upon training 60% of data, chosen randomly 5 times.
+Results:
+![](Images/a7.PNG)
 
-The python file was run in local machine with mini-conda environment.
-The obtained results are attached below:
+SVM is a better model With higher mean Accuracy with lower deviation.
 
 
 
